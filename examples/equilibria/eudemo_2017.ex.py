@@ -29,14 +29,12 @@ Attempt at recreating the EU-DEMO 2017 reference equilibria from a known coilset
 # # EU-DEMO 2017 reference breakdown and equilibrium benchmark
 
 # %%
-import contextlib
 import json
 from copy import deepcopy
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-from IPython import get_ipython
 
 from bluemira.base.file import get_bluemira_path
 from bluemira.base.look_and_feel import bluemira_print
@@ -62,10 +60,7 @@ from bluemira.equilibria.optimisation.problem import (
 )
 from bluemira.equilibria.physics import calc_psib
 from bluemira.equilibria.profiles import (
-    BetaIpProfile,
-    BetaLiIpProfile,
     CustomProfile,
-    DoublePowerFunc,
 )
 from bluemira.equilibria.solve import PicardIterator
 
@@ -76,8 +71,8 @@ from bluemira.equilibria.solve import PicardIterator
 # %%
 plot_defaults()
 
-with contextlib.suppress(AttributeError):
-    get_ipython().run_line_magic("matplotlib", "qt")
+# with contextlib.suppress(AttributeError):
+#     get_ipython().run_line_magic("matplotlib", "qt")
 
 
 path = get_bluemira_path("equilibria", subfolder="examples")

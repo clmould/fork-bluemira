@@ -590,14 +590,14 @@ class PicardIterator:
         }
         for i, x in enumerate(self.result.coilset.current):
             data["x_" + str(i)] = x
-            output_path = name + ".csv"
-            # Only wite a header when the file is first created
-            pd.DataFrame(data).to_csv(
-                output_path,
-                mode="a",
-                header=not pathlib.Path(output_path).exists(),
-                index=False,
-            )
+        output_path = name + ".csv"
+        # Only wite a header when the file is first created
+        pd.DataFrame(data).to_csv(
+            output_path,
+            mode="a",
+            header=not pathlib.Path(output_path).exists(),
+            index=False,
+        )
 
     def __call__(self) -> CoilsetOptimiserResult:
         """

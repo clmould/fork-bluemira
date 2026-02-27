@@ -805,9 +805,9 @@ class IsofluxConstraint(RelativeMagneticConstraint):
         kwargs = {
             "marker": "o",
             "markeredgecolor": "b",
-            "markersize": 5,
+            "markersize": 7,
             "linestyle": "None",
-            "markerfacecolor": "None",
+            "markerfacecolor": "blue",
             "zorder": Zorder.CONSTRAINT.value,
         }
         ax.plot(self.x, self.z, **kwargs)

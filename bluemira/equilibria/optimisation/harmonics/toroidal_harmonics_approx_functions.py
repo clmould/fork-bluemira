@@ -940,6 +940,9 @@ class ToroidalHarmonicsSelectionResult:
     """Bluemira psi for toroidal harmonic coils"""
     th_params: ToroidalHarmonicsParams
     """Set up info"""
+    currents: np.ndarray
+    """Coilset currents from TH - these will only match psi
+    shape in the TH approximation region """
 
 
 def toroidal_harmonic_approximation(
@@ -1067,7 +1070,31 @@ def toroidal_harmonic_approximation(
             coilset_psi = approximate_coilset_psi
             cos_amplitudes = cos_amps
             sin_amplitudes = sin_amps
+        # Currents Calculation
+    Am_cos_current_function, Am_sin_current_function = (  # noqa: N806
+        coil_toroidal_harmonic_amplitude_matrix(
+            input_coils=eq.coilset,
+            th_params=th_params,
+            cos_m_chosen=cos_m,
+            sin_m_chosen=sin_m,
+        )
+    )
 
+    if Am_cos_current_function is not None and Am_sin_current_function is not None:
+        currents2harmonics = np.append(
+            Am_cos_current_function, Am_sin_current_function, axis=0
+        )
+        psi_harmonic_amplitudes = np.append(cos_amplitudes, sin_amplitudes, axis=0)
+    elif Am_cos_current_function is not None:
+        currents2harmonics = Am_cos_current_function
+        psi_harmonic_amplitudes = cos_amplitudes
+    else:
+        currents2harmonics = Am_sin_current_function
+        psi_harmonic_amplitudes = sin_amplitudes
+
+    currents, _residual, _rank, _s = np.linalg.lstsq(
+        currents2harmonics[:, :], psi_harmonic_amplitudes, rcond=None
+    )
     return ToroidalHarmonicsSelectionResult(
         cos_m=cos_m,
         sin_m=sin_m,
@@ -1078,6 +1105,7 @@ def toroidal_harmonic_approximation(
         fixed_psi=fixed_psi,
         true_unfixed_psi=true_coilset_psi,
         th_params=th_params,
+        currents=currents,
     )
 
 

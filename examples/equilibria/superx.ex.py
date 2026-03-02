@@ -746,22 +746,24 @@ ax.set_ylabel("Z [m]")
 f.legend()
 ax.set_aspect("equal")
 
+# %%
+# FOR SLIDES
 diff = np.abs(opt_eq.psi() - th_opt_eq.psi())
 f, ax = plt.subplots()
 ax.plot(original_FS.x, original_FS.z, color="cyan", label="Original LCFS", linewidth=5)
 ax.plot(
     new_FS.x,
     new_FS.z,
-    color="red",
+    color="deeppink",
     label="Updated LCFS",
     linewidth=5,
     linestyle="dashed",
 )
-im = ax.contourf(eq.grid.x, eq.grid.z, diff, levels=nlevels, cmap=cmap)
+im = ax.contourf(eq.grid.x, eq.grid.z, diff, levels=nlevels, cmap="jet")
 cbar = f.colorbar(mappable=im)
-cbar.set_label(r"$\Delta \psi$")
-ax.set_xlabel("R [m]")
-ax.set_ylabel("Z [m]")
+cbar.set_label(r"|$\Delta \psi$| [Vs]")
+ax.set_xlabel("x [m]")
+ax.set_ylabel("z [m]")
 # f.suptitle("actual total psi diff (no rel)")
 # f.legend()
 ax.set_aspect("equal")

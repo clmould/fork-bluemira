@@ -588,9 +588,9 @@ current_opt_problem = TikhonovCurrentCOP(
         # core_constraint,
         modified_leg_constraint,
         # moved_modified_leg_constraint,
-        o_point_constraint,
-        x_point_constraint,
-        x_point_constraint_2,
+        # o_point_constraint,
+        # x_point_constraint,
+        # x_point_constraint_2,
         # x_point_constraint_3,
         # x_point_constraint_4,
         # x_point_constraint_5,
@@ -694,6 +694,12 @@ modified_leg_constraint.plot(ax[0])
 modified_leg_constraint.plot(ax[1])
 ax[0].set_aspect("equal")
 ax[1].set_aspect("equal")
+o_point_constraint.plot(ax[0])
+x_point_constraint.plot(ax[0])
+x_point_constraint_2.plot(ax[0])
+o_point_constraint.plot(ax[1])
+x_point_constraint.plot(ax[1])
+x_point_constraint_2.plot(ax[1])
 
 
 # %%

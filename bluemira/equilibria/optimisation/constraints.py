@@ -614,9 +614,9 @@ class FieldNullConstraint(AbsoluteMagneticConstraint):
             self.x,
             self.z,
             marker="x",
-            color="b",
+            color="r",
             markersize=6,
-            markeredgewidth=2,
+            markeredgewidth=5,
             zorder=Zorder.CONSTRAINT.value,
             linestyle="None",
         )

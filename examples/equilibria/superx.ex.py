@@ -69,7 +69,7 @@ from bluemira.geometry.coordinates import Coordinates
 import seaborn as sns
 
 # %%
-sns.set_theme(context="talk", style="ticks")
+# sns.set_theme(context="talk", style="ticks")
 # %%
 # SuperX Equilbria
 file_path = Path(
@@ -506,6 +506,7 @@ opt_eq.plot(ax=ax)
 # opt_eq.coilset.plot(ax=ax)
 modified_leg_constraint.plot(ax=ax)
 plt.show()
+# %%
 # Rename csv
 Path("data.csv").rename("initial_opt_iter_data.csv")
 # Pick up the csv and plot
@@ -525,12 +526,13 @@ for name, current in zip(opt_eq.coilset.name, opt_eq.coilset.current, strict=Fal
     opt_eq.coilset[name].resize(current)
     opt_eq.coilset[name].fix_size()
     opt_eq.coilset[name].discretisation = 0.3
-_, ax = plt.subplots()
+f, ax = plt.subplots()
 opt_eq.plot(ax=ax)
 opt_eq.coilset.plot(ax=ax)
 th_constraint.plot(ax=ax)
 modified_leg_constraint.plot(ax=ax)
 ax.set_aspect("equal")
+f.suptitle("Starting equilibrium", y=0.95)
 plt.show()
 
 # %%
@@ -669,14 +671,16 @@ program()
 # program()
 ##########################################
 
-_, ax = plt.subplots()
+f, ax = plt.subplots()
 th_opt_eq.plot(ax=ax)
 th_opt_eq.coilset.plot(ax=ax)
 # ax.plot(fs.x, fs.z, color="red")
 modified_leg_constraint.plot(ax=ax)
 ax.set_aspect("equal")
+f.suptitle("Result of optimisation", y=0.95)
 plt.show()
 
+# %%
 
 # Rename csv
 # os.rename("data.csv", "th_opt_iter_data.csv")
@@ -685,21 +689,22 @@ Path("data.csv").rename("th_opt_iter_data_zero_current_start.csv")
 # Pick up the csv and plot
 # jii_plot("th_opt_iter_data.csv")
 
-f, ax = plt.subplots(1, 2)
-opt_eq.plot(ax[0])
-th_opt_eq.plot(ax[1])
-# opt_eq.coilset.plot(ax=ax[0])
-# th_opt_eq.coilset.plot(ax=ax[1])
-modified_leg_constraint.plot(ax[0])
-modified_leg_constraint.plot(ax[1])
-ax[0].set_aspect("equal")
-ax[1].set_aspect("equal")
-o_point_constraint.plot(ax[0])
-x_point_constraint.plot(ax[0])
-x_point_constraint_2.plot(ax[0])
-o_point_constraint.plot(ax[1])
-x_point_constraint.plot(ax[1])
-x_point_constraint_2.plot(ax[1])
+# %%
+# f, ax = plt.subplots(1, 2)
+# opt_eq.plot(ax[0])
+# th_opt_eq.plot(ax[1])
+# # opt_eq.coilset.plot(ax=ax[0])
+# # th_opt_eq.coilset.plot(ax=ax[1])
+# modified_leg_constraint.plot(ax[0])
+# modified_leg_constraint.plot(ax[1])
+# ax[0].set_aspect("equal")
+# ax[1].set_aspect("equal")
+# o_point_constraint.plot(ax[0])
+# x_point_constraint.plot(ax[0])
+# x_point_constraint_2.plot(ax[0])
+# o_point_constraint.plot(ax[1])
+# x_point_constraint.plot(ax[1])
+# x_point_constraint_2.plot(ax[1])
 
 
 # %%
@@ -710,47 +715,47 @@ diff = np.abs(opt_eq.plasma.psi() - th_opt_eq.plasma.psi()) / np.max(
     np.abs(th_opt_eq.plasma.psi())
 )
 
-f, ax = plt.subplots()
-nlevels = PLOT_DEFAULTS["psi"]["nlevels"]
-cmap = PLOT_DEFAULTS["psi"]["cmap"]
-ax.plot(original_FS.x, original_FS.z, color="cyan")
-ax.plot(new_FS.x, new_FS.z, color="red")
-im = ax.contourf(eq.grid.x, eq.grid.z, diff, levels=nlevels, cmap=cmap)
-f.colorbar(mappable=im)
-ax.set_xlabel("R [m]")
-ax.set_ylabel("Z [m]")
-f.suptitle("plasma diff")
-ax.set_aspect("equal")
+# f, ax = plt.subplots()
+# nlevels = PLOT_DEFAULTS["psi"]["nlevels"]
+# cmap = PLOT_DEFAULTS["psi"]["cmap"]
+# ax.plot(original_FS.x, original_FS.z, color="cyan")
+# ax.plot(new_FS.x, new_FS.z, color="red")
+# im = ax.contourf(eq.grid.x, eq.grid.z, diff, levels=nlevels, cmap=cmap)
+# f.colorbar(mappable=im)
+# ax.set_xlabel("R [m]")
+# ax.set_ylabel("Z [m]")
+# f.suptitle("plasma diff")
+# ax.set_aspect("equal")
 
 # %%
 diff = np.abs(opt_eq.psi() - th_opt_eq.psi()) / np.max(np.abs(th_opt_eq.psi())) * 100
 f, ax = plt.subplots()
 nlevels = PLOT_DEFAULTS["psi"]["nlevels"]
 # cmap = PLOT_DEFAULTS["psi"]["cmap"]
-cmap = "seismic"
-ax.plot(
-    original_FS.x,
-    original_FS.z,
-    color="cyan",
-    label="Original LCFS",
-    linewidth=5,
-    # linestyle="dashed",
-)
-ax.plot(
-    new_FS.x,
-    new_FS.z,
-    color="red",
-    label="Updated LCFS",
-    linewidth=6,
-    linestyle="dashed",
-)
-im = ax.contourf(eq.grid.x, eq.grid.z, diff, levels=nlevels, cmap=cmap)
-f.colorbar(mappable=im, label="% difference")
-# f.suptitle("total psi diff")
-ax.set_xlabel("R [m]")
-ax.set_ylabel("Z [m]")
-f.legend()
-ax.set_aspect("equal")
+# cmap = "seismic"
+# ax.plot(
+#     original_FS.x,
+#     original_FS.z,
+#     color="cyan",
+#     label="Original LCFS",
+#     linewidth=5,
+#     # linestyle="dashed",
+# )
+# ax.plot(
+#     new_FS.x,
+#     new_FS.z,
+#     color="red",
+#     label="Updated LCFS",
+#     linewidth=6,
+#     linestyle="dashed",
+# )
+# im = ax.contourf(eq.grid.x, eq.grid.z, diff, levels=nlevels, cmap=cmap)
+# f.colorbar(mappable=im, label="% difference")
+# # f.suptitle("total psi diff")
+# ax.set_xlabel("R [m]")
+# ax.set_ylabel("Z [m]")
+# f.legend()
+# ax.set_aspect("equal")
 
 # %%
 # FOR SLIDES
@@ -770,32 +775,72 @@ cbar = f.colorbar(mappable=im)
 cbar.set_label(r"|$\Delta \psi$| [Vs]")
 ax.set_xlabel("x [m]")
 ax.set_ylabel("z [m]")
+f.suptitle("Absolute difference in total flux", y=0.95)
 # f.suptitle("actual total psi diff (no rel)")
-# f.legend()
+f.legend(loc="lower right")
 ax.set_aspect("equal")
+# # %%
+
+# diff = np.abs(
+#     opt_eq.coilset.psi(opt_eq.grid.x, opt_eq.grid.z)
+#     - th_opt_eq.plasma.psi(opt_eq.grid.x, opt_eq.grid.z)
+# ) / np.max(np.abs(th_opt_eq.plasma.psi(opt_eq.grid.x, opt_eq.grid.z)))
+
+# f, ax = plt.subplots()
+# nlevels = PLOT_DEFAULTS["psi"]["nlevels"]
+# cmap = PLOT_DEFAULTS["psi"]["cmap"]
+# ax.plot(original_FS.x, original_FS.z, color="cyan")
+# ax.plot(new_FS.x, new_FS.z, color="red")
+# im = ax.contourf(eq.grid.x, eq.grid.z, diff, levels=nlevels, cmap=cmap)
+# f.colorbar(mappable=im)
+# f.suptitle("coilset diff")
+# ax.set_aspect("equal")
+
+
+# # %%
+# f, ax = plt.subplots()
+# orig_psi = opt_eq.plasma.psi()
+# opt_psi = th_opt_eq.plasma.psi()
+# ax.contourf(th_opt_eq.grid.x, th_opt_eq.grid.z, opt_psi, levels=nlevels, cmap=cmap)
+# ax.plot(original_FS.x, original_FS.z, color="cyan")
+# ax.plot(new_FS.x, new_FS.z, color="red")
+# ax.set_aspect("equal")
+
 # %%
+f, ax = plt.subplots(1, 3)
+opt_eq.plot(ax=ax[0])
+# opt_eq.coilset.plot(ax=ax[0])
+th_constraint.plot(ax=ax[0])
+modified_leg_constraint.plot(ax=ax[0])
+ax[0].set_aspect("equal")
+ax[0].set_title("Starting equilibrium")
 
-diff = np.abs(
-    opt_eq.coilset.psi(opt_eq.grid.x, opt_eq.grid.z)
-    - th_opt_eq.plasma.psi(opt_eq.grid.x, opt_eq.grid.z)
-) / np.max(np.abs(th_opt_eq.plasma.psi(opt_eq.grid.x, opt_eq.grid.z)))
-
-f, ax = plt.subplots()
-nlevels = PLOT_DEFAULTS["psi"]["nlevels"]
-cmap = PLOT_DEFAULTS["psi"]["cmap"]
-ax.plot(original_FS.x, original_FS.z, color="cyan")
-ax.plot(new_FS.x, new_FS.z, color="red")
-im = ax.contourf(eq.grid.x, eq.grid.z, diff, levels=nlevels, cmap=cmap)
-f.colorbar(mappable=im)
-f.suptitle("coilset diff")
-ax.set_aspect("equal")
+th_opt_eq.plot(ax=ax[1])
+th_opt_eq.coilset.plot(ax=ax[1])
+modified_leg_constraint.plot(ax=ax[1])
+ax[1].set_aspect("equal")
+ax[1].set_title("Result of optimisation")
 
 
-# %%
-f, ax = plt.subplots()
-orig_psi = opt_eq.plasma.psi()
-opt_psi = th_opt_eq.plasma.psi()
-ax.contourf(th_opt_eq.grid.x, th_opt_eq.grid.z, opt_psi, levels=nlevels, cmap=cmap)
-ax.plot(original_FS.x, original_FS.z, color="cyan")
-ax.plot(new_FS.x, new_FS.z, color="red")
-ax.set_aspect("equal")
+ax[2].plot(
+    original_FS.x, original_FS.z, color="cyan", label="Original LCFS", linewidth=5
+)
+ax[2].plot(
+    new_FS.x,
+    new_FS.z,
+    color="deeppink",
+    label="Updated LCFS",
+    linewidth=5,
+    linestyle="dashed",
+)
+im = ax[2].contourf(eq.grid.x, eq.grid.z, diff, levels=nlevels, cmap="jet")
+cbar = f.colorbar(mappable=im)
+cbar.set_label(r"|$\Delta \psi$| [Vs]")
+ax[2].set_xlabel("x [m]")
+ax[2].set_ylabel("z [m]")
+ax[2].set_title("Absolute difference in total flux", y=0.95)
+# f.suptitle("actual total psi diff (no rel)")
+f.legend(loc="lower right")
+ax[2].set_aspect("equal")
+
+f.tight_layout()

@@ -38,14 +38,23 @@ import numpy as np
 
 from bluemira.base.file import get_bluemira_path
 from bluemira.display import plot_defaults
+from bluemira.equilibria.analysis import EqAnalysis
 from bluemira.equilibria.coils import Coil, CoilSet
+from bluemira.equilibria.diagnostics import (
+    EqDiagnosticOptions,
+    EqPlotMask,
+    EqSubplots,
+    PsiPlotType,
+)
 from bluemira.equilibria.equilibrium import Breakdown, Equilibrium
+from bluemira.equilibria.error import EquilibriaError
 from bluemira.equilibria.grid import Grid
 from bluemira.equilibria.optimisation.constraints import (
     CoilFieldConstraints,
     CoilForceConstraints,
     FieldNullConstraint,
     MagneticConstraintSet,
+    PsiBoundaryConstraint,
 )
 from bluemira.equilibria.optimisation.harmonics.harmonics_constraints import (
     ToroidalHarmonicConstraint,
@@ -62,6 +71,7 @@ from bluemira.equilibria.optimisation.problem import (
     OutboardBreakdownZoneStrategy,
     TikhonovCurrentCOP,
 )
+from bluemira.equilibria.optimisation.problem._minimal_current import MinimalCurrentCOP
 from bluemira.equilibria.physics import calc_psib
 from bluemira.equilibria.plotting import PLOT_DEFAULTS
 from bluemira.equilibria.solve import DudsonConvergence, PicardIterator
@@ -309,6 +319,60 @@ sof_result = th_approx_and_info(sof, setup)
 # %%
 eof_result = th_approx_and_info(eof, setup)
 
+
+# %%
+# Checking initial plots
+diag_ops_2 = EqDiagnosticOptions(
+    psi_diff=PsiPlotType.PSI_DIFF,
+    split_psi_plots=EqSubplots.XZ_COMPONENT_PSI,
+    plot_mask=EqPlotMask.IN_REF_LCFS,
+)
+
+eq_analysis_sof = EqAnalysis(
+    input_eq=sof, diag_ops=diag_ops_2, reference_eq=reference_eq
+)
+
+eq_analysis_eof = EqAnalysis(
+    input_eq=eof, diag_ops=diag_ops_2, reference_eq=reference_eq
+)
+
+eq_analysis_sof.plot_compare_psi()
+eq_analysis_eof.plot_compare_psi()
+
+# %%
+print("ref")
+print(np.min(reference_eq.plasma.psi()))
+print(np.max(reference_eq.plasma.psi()))
+print(np.mean(reference_eq.plasma.psi()))
+
+print("\nSOF")
+print(np.min(sof.plasma.psi()))
+print(np.max(sof.plasma.psi()))
+print(np.mean(sof.plasma.psi()))
+
+print("\nEOF")
+print(np.min(eof.plasma.psi()))
+print(np.max(eof.plasma.psi()))
+print(np.mean(eof.plasma.psi()))
+
+# %%
+# REF
+ref_lcfs = reference_eq.get_LCFS()
+ind = np.argmax(ref_lcfs.x)
+psi_at_ref_lcfs = reference_eq.psi(ref_lcfs.x[ind], ref_lcfs.z[ind])
+print(psi_at_ref_lcfs)
+
+# SOF
+sof_lcfs = sof.get_LCFS()
+ind = np.argmax(sof_lcfs.x)
+psi_at_sof_lcfs = sof.psi(sof_lcfs.x[ind], sof_lcfs.z[ind])
+print(psi_at_sof_lcfs)
+
+# Get psi at eof boundary
+eof_lcfs = eof.get_LCFS()
+ind = np.argmax(eof_lcfs.x)
+psi_at_eof_lcfs = eof.psi(eof_lcfs.x[ind], eof_lcfs.z[ind])
+print(psi_at_eof_lcfs)
 # %% [markdown]
 # ### Test 2 - ref to sof/eof
 #
@@ -318,8 +382,8 @@ eof_result = th_approx_and_info(eof, setup)
 # %%
 # Don't forget factor of 2 pi
 # Note: there was an np.abs used on psi_sof and psi_eof before
-sof_factor = psi_sof / (2 * np.pi * psi_at_ref_lcfs)
-eof_factor = psi_eof / (2 * np.pi * psi_at_ref_lcfs)
+sof_factor = np.abs(psi_sof / (2 * np.pi * psi_at_ref_lcfs))
+eof_factor = np.abs(psi_eof / (2 * np.pi * psi_at_ref_lcfs))
 
 print(f"{psi_sof=}")
 print(f"{psi_eof=}")
@@ -382,7 +446,7 @@ axs[2].contourf(
     levels=nlevels,
     cmap=cmap,
 )
-axs[2].set_title("Ref psi from ref harmonics")
+axs[2].set_title("Ref psi from \nref harmonics")
 
 
 axs[3].contourf(
@@ -392,7 +456,7 @@ axs[3].contourf(
     levels=nlevels,
     cmap=cmap,
 )
-axs[3].set_title("Coilset psi from th approx result")
+axs[3].set_title("Coilset psi from \nth approx result")
 
 
 axs[4].contourf(
@@ -410,6 +474,8 @@ axs[1].set_aspect("equal")
 axs[2].set_aspect("equal")
 axs[3].set_aspect("equal")
 axs[4].set_aspect("equal")
+
+
 # %%
 nlevels = PLOT_DEFAULTS["psi"]["nlevels"]
 cmap = PLOT_DEFAULTS["psi"]["cmap"]
@@ -422,7 +488,7 @@ axs[0].contourf(
     levels=nlevels,
     cmap=cmap,
 )
-axs[0].set_title("SOF + fixed psi from approx")
+axs[0].set_title("SOF + fixed \npsi from approx")
 
 
 axs[1].contourf(
@@ -432,7 +498,7 @@ axs[1].contourf(
     levels=nlevels,
     cmap=cmap,
 )
-axs[1].set_title("EOF + fixed psi from approx")
+axs[1].set_title("EOF + fixed \npsi from approx")
 
 
 axs[2].contourf(
@@ -442,7 +508,7 @@ axs[2].contourf(
     levels=nlevels,
     cmap=cmap,
 )
-axs[2].set_title("Ref psi from ref harmonics \n+ fixed psi from approx")
+axs[2].set_title("Ref psi from \nref harmonics \n+ fixed psi from approx")
 
 axs[3].contourf(
     ref_result.th_params.R,
@@ -451,7 +517,7 @@ axs[3].contourf(
     levels=nlevels,
     cmap=cmap,
 )
-axs[3].set_title("Coilset psi from th approx result \n+ fixed psi from approx")
+axs[3].set_title("Coilset psi from \nth approx result \n+ fixed psi from approx")
 
 
 axs[4].contourf(
@@ -470,6 +536,67 @@ axs[2].set_aspect("equal")
 axs[3].set_aspect("equal")
 axs[4].set_aspect("equal")
 
+# %%
+f, axs = plt.subplots(1, 5)
+
+axs[0].contourf(
+    ref_result.th_params.R,
+    ref_result.th_params.Z,
+    psi_calc_sof.T,
+    levels=nlevels,
+    cmap=cmap,
+)
+axs[0].set_title("SOF")
+
+
+axs[1].contourf(
+    ref_result.th_params.R,
+    ref_result.th_params.Z,
+    psi_calc_eof.T,
+    levels=nlevels,
+    cmap=cmap,
+)
+axs[1].set_title("EOF")
+
+
+axs[2].contourf(
+    ref_result.th_params.R,
+    ref_result.th_params.Z,
+    sof.coilset.psi(ref_result.th_params.R, ref_result.th_params.Z),
+    levels=nlevels,
+    cmap=cmap,
+)
+axs[2].set_title("Psi from old sof")
+
+
+axs[3].contourf(
+    ref_result.th_params.R,
+    ref_result.th_params.Z,
+    eof.coilset.psi(ref_result.th_params.R, ref_result.th_params.Z),
+    levels=nlevels,
+    cmap=cmap,
+)
+axs[3].set_title("Psi from old eof")
+
+
+axs[4].contourf(
+    ref_result.th_params.R,
+    ref_result.th_params.Z,
+    reference_eq.coilset.psi(ref_result.th_params.R, ref_result.th_params.Z),
+    levels=nlevels,
+    cmap=cmap,
+)
+axs[4].set_title("Bluemira coilset psi")
+
+
+axs[0].set_aspect("equal")
+axs[1].set_aspect("equal")
+axs[2].set_aspect("equal")
+axs[3].set_aspect("equal")
+axs[4].set_aspect("equal")
+
+# %%
+# raise EquilibriaError
 # %%
 # make sof and eof results - same th params
 # need to change the amplitudes as these are used in the constraint
@@ -500,40 +627,53 @@ x_point_constraint = FieldNullConstraint(
 o_point_constraint = FieldNullConstraint(os[0].x, os[0].z, tolerance=1e-3)
 
 # %%
+sof_psi_boundary = PsiBoundaryConstraint(
+    x=ref_lcfs.x[ind],
+    z=ref_lcfs.z[ind],
+    target_value=psi_sof / (2 * np.pi),
+    tolerance=0.5,
+)
+eof_psi_boundary = PsiBoundaryConstraint(
+    x=ref_lcfs.x[ind],
+    z=ref_lcfs.z[ind],
+    target_value=psi_eof / (2 * np.pi),
+    tolerance=0.5,
+)
+# %%
 # SOF OPT
 sof_opt_eq = deepcopy(reference_eq)
 sof_opt_eq.coilset.control = ref_result.th_params.th_coil_names
 
-current_opt_problem = TikhonovCurrentCOP(
-    sof_opt_eq,
-    targets=MagneticConstraintSet([
-        sof_constraint,
-    ]),
-    gamma=1e-12,
-    opt_algorithm="SLSQP",
-    # opt_conditions={"max_eval": 1000, "ftol_rel": 1e-4},
-    # opt_parameters={"initial_step": 0.1},
-    max_currents=3e10,
-    constraints=[
-        x_point_constraint,
-        o_point_constraint,
-        # sof_constraint,
-    ],
-)
-
-# current_opt_problem = MinimalCurrentCOP(
+# current_opt_problem = TikhonovCurrentCOP(
 #     sof_opt_eq,
-#     opt_algorithm="COBYLA",
-#     opt_conditions={"max_eval": 1000, "ftol_rel": 1e-6},
+#     targets=MagneticConstraintSet([
+#         sof_constraint,
+#     ]),
+#     gamma=1e-12,
+#     opt_algorithm="SLSQP",
+#     # opt_conditions={"max_eval": 1000, "ftol_rel": 1e-4},
+#     # opt_parameters={"initial_step": 0.1},
 #     max_currents=3e10,
-#     constraints=[sof_constraint],
+#     constraints=[
+#         sof_psi_boundary
+#         # x_point_constraint,
+#         # o_point_constraint,
+#         # sof_constraint,
+#     ],
 # )
 
-program = PicardIterator(
+current_opt_problem = MinimalCurrentCOP(
     sof_opt_eq,
+    opt_algorithm="SLSQP",
+    opt_conditions={"max_eval": 1000, "ftol_rel": 1e-6},
+    max_currents=3e10,
+    constraints=[sof_constraint, sof_psi_boundary],
+)
+
+program = PicardIterator(
     current_opt_problem,
     fixed_coils=True,
-    convergence=DudsonConvergence(1e-3),
+    convergence=DudsonConvergence(1e-6),
     relaxation=0.0,
     maxiter=50,
 )
@@ -554,34 +694,40 @@ plt.show()
 eof_opt_eq = deepcopy(reference_eq)
 eof_opt_eq.coilset.control = ref_result.th_params.th_coil_names
 
-current_opt_problem = TikhonovCurrentCOP(
-    eof_opt_eq,
-    targets=MagneticConstraintSet([
-        eof_constraint,
-    ]),
-    gamma=1e-12,
-    opt_algorithm="SLSQP",
-    # opt_conditions={"max_eval": 1000, "ftol_rel": 1e-4},
-    # opt_parameters={"initial_step": 0.1},
-    max_currents=3e10,
-    constraints=[
-        x_point_constraint,
-        o_point_constraint,
-        # eof_constraint,
-    ],
-)
+# current_opt_problem = TikhonovCurrentCOP(
+#     eof_opt_eq,
+#     targets=MagneticConstraintSet([
+#         eof_constraint,
+#     ]),
+#     gamma=1e-12,
+#     opt_algorithm="SLSQP",
+#     # opt_conditions={"max_eval": 1000, "ftol_rel": 1e-4},
+#     # opt_parameters={"initial_step": 0.1},
+#     max_currents=3e10,
+#     # constraints=[
+#     #     x_point_constraint,
+#     #     o_point_constraint,
+#     #     # eof_constraint,
+#     # ],
+# )
 
 # current_opt_problem.optimise()
 # eof_opt_eq.solve()
 # f, ax = plt.subplots()
 # eof_opt_eq.plot(ax=ax)
 
-# %%
+current_opt_problem = MinimalCurrentCOP(
+    sof_opt_eq,
+    opt_algorithm="SLSQP",
+    opt_conditions={"max_eval": 1000, "ftol_rel": 1e-6},
+    max_currents=3e10,
+    constraints=[eof_constraint, eof_psi_boundary],
+)
+
 program = PicardIterator(
-    eof_opt_eq,
     current_opt_problem,
     fixed_coils=True,
-    convergence=DudsonConvergence(1e-3),
+    convergence=DudsonConvergence(1e-6),
     relaxation=0.0,
     maxiter=50,
 )
@@ -597,6 +743,8 @@ eof_opt_eq.plot(ax=ax_2)
 ax_2.set_title("Optimised Equilibrium EOF")
 plt.show()
 
+# %%
+raise EquilibriaError
 # %% [markdown]
 # ### Test 3 - reduced psi
 #
@@ -652,7 +800,6 @@ current_opt_problem = TikhonovCurrentCOP(
 )
 
 program = PicardIterator(
-    sof_opt_eq,
     current_opt_problem,
     fixed_coils=True,
     convergence=DudsonConvergence(1e-3),
@@ -693,7 +840,6 @@ current_opt_problem = TikhonovCurrentCOP(
 )
 
 program = PicardIterator(
-    eof_opt_eq,
     current_opt_problem,
     fixed_coils=True,
     convergence=DudsonConvergence(1e-3),
@@ -762,7 +908,6 @@ current_opt_problem = TikhonovCurrentCOP(
 )
 
 program = PicardIterator(
-    reverse_eq,
     current_opt_problem,
     fixed_coils=True,
     convergence=DudsonConvergence(1e-3),

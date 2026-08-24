@@ -845,8 +845,8 @@ class EquilibriumComparisonBasePlotter(EquilibriumPlotterMixin, Plotter):
                 self.ax[i].plot(
                     x,
                     z,
-                    color="blue",
-                    linewidth=PLOT_DEFAULTS["separatrix"]["linewidth"],
+                    color="cyan",
+                    linewidth=4,  # PLOT_DEFAULTS["separatrix"]["linewidth"],
                     zorder=9,
                     linestyle="--",
                     label=ref_lcfs_label,
@@ -855,8 +855,8 @@ class EquilibriumComparisonBasePlotter(EquilibriumPlotterMixin, Plotter):
             self.ax.plot(
                 x,
                 z,
-                color="blue",
-                linewidth=PLOT_DEFAULTS["separatrix"]["linewidth"],
+                color="cyan",
+                linewidth=4,  # PLOT_DEFAULTS["separatrix"]["linewidth"],
                 zorder=9,
                 linestyle="--",
                 label=ref_lcfs_label,
@@ -881,8 +881,8 @@ class EquilibriumComparisonBasePlotter(EquilibriumPlotterMixin, Plotter):
                 self.ax[i].plot(
                     x,
                     z,
-                    color=PLOT_DEFAULTS["separatrix"]["color"],
-                    linewidth=PLOT_DEFAULTS["separatrix"]["linewidth"],
+                    color="magenta",  # PLOT_DEFAULTS["separatrix"]["color"],
+                    linewidth=4,  # PLOT_DEFAULTS["separatrix"]["linewidth"],
                     zorder=9,
                     label=lcfs_label,
                 )
@@ -890,8 +890,8 @@ class EquilibriumComparisonBasePlotter(EquilibriumPlotterMixin, Plotter):
             self.ax.plot(
                 x,
                 z,
-                color=PLOT_DEFAULTS["separatrix"]["color"],
-                linewidth=PLOT_DEFAULTS["separatrix"]["linewidth"],
+                color="magenta",  # PLOT_DEFAULTS["separatrix"]["color"],
+                linewidth=4,  # PLOT_DEFAULTS["separatrix"]["linewidth"],
                 zorder=9,
                 label=lcfs_label,
             )

@@ -845,8 +845,8 @@ class EquilibriumComparisonBasePlotter(EquilibriumPlotterMixin, Plotter):
                 self.ax[i].plot(
                     x,
                     z,
-                    color="blue",
-                    linewidth=PLOT_DEFAULTS["separatrix"]["linewidth"],
+                    color="cyan",
+                    linewidth=4,  # PLOT_DEFAULTS["separatrix"]["linewidth"],
                     zorder=9,
                     linestyle="--",
                     label=ref_lcfs_label,
@@ -855,8 +855,8 @@ class EquilibriumComparisonBasePlotter(EquilibriumPlotterMixin, Plotter):
             self.ax.plot(
                 x,
                 z,
-                color="blue",
-                linewidth=PLOT_DEFAULTS["separatrix"]["linewidth"],
+                color="cyan",
+                linewidth=4,  # PLOT_DEFAULTS["separatrix"]["linewidth"],
                 zorder=9,
                 linestyle="--",
                 label=ref_lcfs_label,
@@ -881,8 +881,8 @@ class EquilibriumComparisonBasePlotter(EquilibriumPlotterMixin, Plotter):
                 self.ax[i].plot(
                     x,
                     z,
-                    color=PLOT_DEFAULTS["separatrix"]["color"],
-                    linewidth=PLOT_DEFAULTS["separatrix"]["linewidth"],
+                    color="magenta",  # PLOT_DEFAULTS["separatrix"]["color"],
+                    linewidth=4,  # PLOT_DEFAULTS["separatrix"]["linewidth"],
                     zorder=9,
                     label=lcfs_label,
                 )
@@ -890,8 +890,8 @@ class EquilibriumComparisonBasePlotter(EquilibriumPlotterMixin, Plotter):
             self.ax.plot(
                 x,
                 z,
-                color=PLOT_DEFAULTS["separatrix"]["color"],
-                linewidth=PLOT_DEFAULTS["separatrix"]["linewidth"],
+                color="magenta",  # PLOT_DEFAULTS["separatrix"]["color"],
+                linewidth=4,  # PLOT_DEFAULTS["separatrix"]["linewidth"],
                 zorder=9,
                 label=lcfs_label,
             )
@@ -1393,15 +1393,15 @@ class EquilibriumComparisonPostOptPlotter(EquilibriumComparisonBasePlotter):
             self.grid.x, self.grid.z, mask_matx, input_lcfs.xz.T, include_edges=False
         )
         # Note use '+' as we want any area in ref or input LCFS.
-        return ref_mask + input_mask
+        return np.multiply(np.logical_or(ref_mask, input_mask), 1)
 
     def apply_mask(self, mask_type):
         """Apply mask to psi."""
-        if mask_type in EqPlotMask.IN:
+        if mask_type in EqPlotMask.OUT:
             self.coilset_psi *= self.mask
             self.plasma_psi *= self.mask
             self.total_psi *= self.mask
-        elif mask_type in EqPlotMask.OUT:
+        elif mask_type in EqPlotMask.IN:
             self.coilset_psi *= abs(self.mask - 1)
             self.plasma_psi *= abs(self.mask - 1)
             self.total_psi *= abs(self.mask - 1)

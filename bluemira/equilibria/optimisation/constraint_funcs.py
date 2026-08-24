@@ -172,6 +172,9 @@ class L2NormConstraint(ConstraintFunction):
 
     def df_constraint(self, vector: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
         """Constraint derivative"""  # noqa: DOC201
+        # import pdb
+
+        # pdb.set_trace()
         currents = self.scale * vector
         df = 2 * (self.a_mat.T @ self.a_mat @ currents - self.a_mat.T @ self.b_vec)
         return self.scale * df

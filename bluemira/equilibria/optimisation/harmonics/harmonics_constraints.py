@@ -200,8 +200,14 @@ class ToroidalHarmonicConstraint(UpdateableConstraint):
         ref_harmonics_sin_amplitudes = th_result.sin_amplitudes
         th_params = th_result.th_params
 
-        tolerance_cos = np.abs(relative_tolerance_cos * ref_harmonics_cos_amplitudes)
-        tolerance_sin = np.abs(relative_tolerance_sin * ref_harmonics_sin_amplitudes)
+        if len(ref_harmonics_cos_amplitudes) > 0:
+            tolerance_cos = np.abs(relative_tolerance_cos * ref_harmonics_cos_amplitudes)
+        else:
+            tolerance_cos = []
+        if len(ref_harmonics_sin_amplitudes) > 0:
+            tolerance_sin = np.abs(relative_tolerance_sin * ref_harmonics_sin_amplitudes)
+        else:
+            tolerance_sin = []
         tolerance = np.append(tolerance_cos, tolerance_sin, axis=0)
         self.cos_degrees_chosen = ref_harmonics_cos
         self.sin_degrees_chosen = ref_harmonics_sin

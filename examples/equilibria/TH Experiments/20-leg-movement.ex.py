@@ -151,10 +151,6 @@ lcfs = ref_eq.get_LCFS()
 arg_inner = np.argmin(lcfs.x)
 
 
-ref_lcfs = ref_eq.get_LCFS()
-arg_inner = np.argmin(ref_lcfs.x)
-# TODO are these argmins the same?
-
 # %%
 # fair core constraints:
 x_extrema = lcfs.x[
@@ -442,8 +438,8 @@ for i in range(len(theta)):
     leg_constraint = IsofluxConstraint(
         x_coord,
         z_coord,
-        ref_lcfs.x[arg_inner],
-        ref_lcfs.z[arg_inner],
+        lcfs.x[arg_inner],
+        lcfs.z[arg_inner],
         tolerance=1e-3,
     )
     conv = 5e-3

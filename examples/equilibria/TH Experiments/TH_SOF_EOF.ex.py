@@ -391,6 +391,9 @@ psi_bdry_eof = PsiBoundaryConstraint(
     x=x_extrema, z=z_extrema, target_value=psi_eof, tolerance=0.5
 )
 # 1e-3 * np.abs(psi_eof)
+# TODO add 2 extra pts to match TH - put on IB side half way between inner midplane pt
+# and upper pt in z, or have 2 on the top one on IB midway and 1 OB midway
+# ^ see which works better
 
 # %%
 
@@ -440,7 +443,7 @@ sof_th_opt_problem = MinimalCurrentCOP(
 program = PicardIterator(
     sof_th_opt_problem,
     fixed_coils=True,
-    convergence=DudsonConvergence(5e-3),
+    convergence=DudsonConvergence(3e-2),
     relaxation=0.2,
     maxiter=50,
 )
@@ -469,7 +472,7 @@ eof_th_opt_problem = MinimalCurrentCOP(
 program = PicardIterator(
     eof_th_opt_problem,
     fixed_coils=True,
-    convergence=DudsonConvergence(5e-3),
+    convergence=DudsonConvergence(3e-2),
     relaxation=0.2,
     maxiter=50,
 )
@@ -484,7 +487,7 @@ axs[1][2].annotate(
     f"delta_psi: {100 * program.convergence.progress[-1]:.3f}%", (0.1, 0.5)
 )
 axs[1][2].annotate(f"Cons satisfied: {result.constraints_satisfied}", (0.1, 0.4))
-
+plt.show()
 # %%
 # uncon, sof + core, eof + core
 
@@ -558,7 +561,7 @@ axs[1][2].annotate(
     f"delta_psi: {100 * program.convergence.progress[-1]:.3f}%", (0.1, 0.5)
 )
 axs[1][2].annotate(f"Cons satisfied: {result.constraints_satisfied}", (0.1, 0.4))
-
+plt.show()
 
 # TODO do for EOF
 

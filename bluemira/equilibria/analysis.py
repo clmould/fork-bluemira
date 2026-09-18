@@ -845,7 +845,7 @@ class EqAnalysis:
                     f"you have provided settings for {np.shape(ax)}."
                 )
         else:
-            _, ax = plt.subplots(2, 3)
+            f, ax = plt.subplots(2, 3)
 
         ref_profs = [
             ref.profiles.pprime,
@@ -883,8 +883,8 @@ class EqAnalysis:
 
         ax[1, 2].axis("off")
         plt.suptitle("Profile Comparison")
-        plt.show()
-        return ax
+        # plt.show()
+        return f, ax
 
     def plot_target_flux(
         self,

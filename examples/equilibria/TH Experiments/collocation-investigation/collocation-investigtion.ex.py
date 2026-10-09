@@ -99,51 +99,51 @@ dof_values = [3, 4, 5, 6]
 # %%
 # NOTE - this runs everything, but have saved all results in a dict - read in from next cell!
 
-t = time()
-test_dict = {}
-# for dof in [3]:  # due to failure when first running
-for dof in dof_values:
-    # want 36 extra points
-    for val in range(value_range):
-        # plot and save plots for certain values
-        # some certain ones, some relative, eg 2 * DOF, 3 * DOF, DOF**2
-        # some values plus 2DOF, 3DOF, 4DOF, DOF**2
-        # plot = (
-        #     True
-        #     if val in [0, 18, 36, 37, dof, 2 * dof, 3 * dof, dof**2 - dof]
-        #     else False
-        # )  # noqa: E501
-        try:
-            th_result = toroidal_harmonic_approximation(
-                eq=ref_eq,
-                th_params=th_params,
-                psi_norm=psi_norm,
-                n_degrees_of_freedom=dof,
-                max_harmonic_mode=5,
-                n_points=dof + val,  # use DOF + value as n_points
-                plasma_mask=True,
-                value=val,
-                plot=True,
-            )
-            colloc_res = CollocationResult(
-                dof=dof,
-                value=val,
-                n_points=th_result.n_points,
-                error=th_result.error,
-                residual=th_result.residual,
-                condition_number=th_result.condition_number,
-            )
-        except EquilibriaError:
-            th_result = "N/A"
-            colloc_res = "N/A"
-        # save th for completeness and possible plotting later
-        # all_th_results[dof] = th_result
-        # collocation_results[dof, val] = colloc_res
-        test_dict[dof, val] = colloc_res
+# t = time()
+# test_dict = {}
+# # for dof in [3]:  # due to failure when first running
+# for dof in dof_values:
+#     # want 36 extra points
+#     for val in range(value_range):
+#         # plot and save plots for certain values
+#         # some certain ones, some relative, eg 2 * DOF, 3 * DOF, DOF**2
+#         # some values plus 2DOF, 3DOF, 4DOF, DOF**2
+#         # plot = (
+#         #     True
+#         #     if val in [0, 18, 36, 37, dof, 2 * dof, 3 * dof, dof**2 - dof]
+#         #     else False
+#         # )  # noqa: E501
+#         try:
+#             th_result = toroidal_harmonic_approximation(
+#                 eq=ref_eq,
+#                 th_params=th_params,
+#                 psi_norm=psi_norm,
+#                 n_degrees_of_freedom=dof,
+#                 max_harmonic_mode=5,
+#                 n_points=dof + val,  # use DOF + value as n_points
+#                 plasma_mask=True,
+#                 value=val,
+#                 plot=True,
+#             )
+#             colloc_res = CollocationResult(
+#                 dof=dof,
+#                 value=val,
+#                 n_points=th_result.n_points,
+#                 error=th_result.error,
+#                 residual=th_result.residual,
+#                 condition_number=th_result.condition_number,
+#             )
+#         except EquilibriaError:
+#             th_result = "N/A"
+#             colloc_res = "N/A"
+#         # save th for completeness and possible plotting later
+#         # all_th_results[dof] = th_result
+#         # collocation_results[dof, val] = colloc_res
+#         test_dict[dof, val] = colloc_res
 
-# for reference of how long this takes to run
-coll_invest = time() - t
-print(f"time = {coll_invest}")
+# # for reference of how long this takes to run
+# coll_invest = time() - t
+# print(f"time = {coll_invest}")
 
 
 # %%

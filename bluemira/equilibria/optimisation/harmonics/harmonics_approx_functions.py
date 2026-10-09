@@ -190,6 +190,15 @@ class PointType(Enum):
     RANDOM = auto()
     RANDOM_PLUS_EXTREMA = auto()
     GRID_POINTS = auto()
+    # 2 new options
+    # draft names!
+    INNER_FS = auto()
+    """4 extrema, effective centre, and points sampled on inner FS"""
+    WONKY_PLUS = auto()  # BIRDS_FOOT?
+    """4 extrema, effective centre, and lines joining up the extrema to the
+    effective centre (looks like wonky plus)"""
+    DOUBLE_INNER_FS = auto()  # pencil in, but this may require too many points?
+    # already 5 pts with extrema and centre?
 
 
 @dataclass
@@ -270,6 +279,8 @@ def collocation_points(
     grid_num: tuple[int, int] | None = None,
     *,
     use_mask: bool = True,
+    eq: Equilibrium | None = None,  # have as optional
+    psi_norm_inner: float | None = None,  # have as optional
 ) -> Collocation:
     """
     Create a set of collocation points for use wih spherical harmonic
@@ -394,6 +405,84 @@ def collocation_points(
         # Spherical coordinates
         collocation_r = np.sqrt(collocation_x**2 + collocation_z**2)
         collocation_theta = np.arctan2(collocation_x, collocation_z)
+
+    # keeping these separate for investigations!!!
+    if point_type in {PointType.INNER_FS, PointType.DOUBLE_INNER_FS}:
+        # Get the 4 extrema plus effective centre, and points on an inner FS
+        # will need to pass in a 2nd FS and effective centre? or pass in eq and calculate here?
+
+        # Extrema
+        d = 0.1
+        extrema_x = np.array([
+            np.amin(x_bdry) + d,
+            np.amax(x_bdry) - d,
+            x_bdry[np.argmax(z_bdry)],
+            x_bdry[np.argmin(z_bdry)],
+        ])
+        extrema_z = np.array([0, 0, np.amax(z_bdry) - d, np.amin(z_bdry) + d])
+
+        # effective centre
+        x_centre, z_centre = eq.effective_centre()
+
+        # inner FS and sample with n_points
+        if psi_norm_inner is not None:  # can remove when decide on default psi norm
+            inner_fs = eq.get_flux_surface(psi_norm_inner)
+
+            # sample n_points along inner FS
+            interval = int(np.ceil(len(inner_fs.x) / n_points))
+            sampled_xs = inner_fs.x[::interval]
+            sampled_zs = inner_fs.z[::interval]
+
+        collocation_x = np.concatenate([extrema_x, [x_centre], sampled_xs])
+        collocation_z = np.concatenate([extrema_z, [z_centre], sampled_zs])
+
+        if point_type == PointType.DOUBLE_INNER_FS:
+            second_inner_fs = eq.get_flux_surface(psi_norm_inner / 2)
+
+            # sample n_points along inner FS
+            interval = int(np.ceil(len(second_inner_fs.x) / n_points))
+            second_sampled_xs = second_inner_fs.x[::interval]
+            second_sampled_zs = second_inner_fs.z[::interval]
+            collocation_x = np.concatenate([collocation_x, second_sampled_xs])
+            collocation_z = np.concatenate([collocation_z, second_sampled_zs])
+
+        collocation_r = np.zeros_like(collocation_x)
+        collocation_theta = np.zeros_like(collocation_z)
+
+    if point_type is PointType.WONKY_PLUS:
+        # Get the 4 extrema plus effective centre, join up in wonky plus shape
+        # Extrema
+        d = 0.1
+        extrema_x = np.array([
+            np.amin(x_bdry) + d,
+            np.amax(x_bdry) - d,
+            x_bdry[np.argmax(z_bdry)],
+            x_bdry[np.argmin(z_bdry)],
+        ])
+        extrema_z = np.array([0, 0, np.amax(z_bdry) - d, np.amin(z_bdry) + d])
+
+        # effective centre
+        x_centre, z_centre = eq.effective_centre()
+
+        # sample each with n_points on the line
+        interval = n_points
+
+        # get points between extrema and centre
+        # use interval + 2 to get correct number of points between the extrema
+        # and the centre, and use [1:-1] as we do not want the extrema or centre
+        # included in these points
+        connecting_points_x = []
+        connecting_points_z = []
+        for x, z in zip(extrema_x, extrema_z, strict=True):
+            inbetween_xs = np.linspace(x_centre, x, interval + 2)[1:-1]
+            inbetween_zs = np.linspace(z_centre, z, interval + 2)[1:-1]
+            connecting_points_x.extend(inbetween_xs)
+            connecting_points_z.extend(inbetween_zs)
+
+        collocation_x = np.concatenate([connecting_points_x, extrema_x, [x_centre]])
+        collocation_z = np.concatenate([connecting_points_z, extrema_z, [z_centre]])
+        collocation_r = np.zeros_like(collocation_x)
+        collocation_theta = np.zeros_like(collocation_z)
 
     # Going to round everything to 3 decimal places,
     # as we do not need to sample at higher precision

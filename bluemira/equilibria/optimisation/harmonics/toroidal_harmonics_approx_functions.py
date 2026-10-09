@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from itertools import combinations
 from math import factorial
+from pathlib import Path
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -32,6 +33,7 @@ from bluemira.equilibria.optimisation.harmonics.harmonics_approx_functions impor
 from bluemira.equilibria.plotting import PLOT_DEFAULTS
 from bluemira.geometry.coordinates import Coordinates
 from bluemira.geometry.tools import make_polygon
+from bluemira.utilities.plot_tools import save_figure
 from bluemira.utilities.tools import (
     cylindrical_to_toroidal,
     sig_fig_round,
@@ -940,6 +942,9 @@ class ToroidalHarmonicsSelectionResult:
     """Bluemira psi for toroidal harmonic coils"""
     th_params: ToroidalHarmonicsParams
     """Set up info"""
+    condition_number: float
+    residual: float
+    n_points: int
 
 
 def toroidal_harmonic_approximation(
@@ -947,9 +952,14 @@ def toroidal_harmonic_approximation(
     th_params: ToroidalHarmonicsParams | None = None,
     psi_norm: float = 0.95,
     n_degrees_of_freedom: int | None = None,
-    max_harmonic_mode: int = 5,
+    max_harmonic_mode: int = 5,  # NOTE these will all be removed as user inputs
+    value: int = 0,  # NOTE these will all be removed as user inputs
+    n_points: int | None = None,  # NOTE these will all be removed as user inputs
     *,
-    plasma_mask: bool = False,
+    plasma_mask: bool = False,  # NOTE these will all be removed as user inputs
+    plot: bool = False,  # NOTE these will all be removed as user inputs
+    collocation_pts: Collocation
+    | None = None,  # NOTE these will all be removed as user inputs
 ) -> ToroidalHarmonicsSelectionResult:
     """
     Calculate the toroidal harmonic (TH) amplitudes/coefficients for a given
@@ -1010,13 +1020,33 @@ def toroidal_harmonic_approximation(
         R_0, Z_0 = eq.effective_centre()
         th_params = toroidal_harmonic_grid_and_coil_setup(eq=eq, R_0=R_0, Z_0=Z_0)
 
-    # TODO @clmould: this will be updated in #4471
-    collocation = collocation_points(
-        eq.get_LCFS(),
-        PointType.GRID_POINTS,
-        n_points=5,
-        use_mask=True,
-    )
+    # TODO colloc experiments - use DOF as n_points
+    # put pt type and n_points as inputs
+    # +1 to match that on develop
+    if collocation_pts is None:
+        n_points = n_degrees_of_freedom + 1 + value if n_points is None else n_points
+        collocation = collocation_points(
+            eq.get_LCFS(),
+            PointType.RANDOM,
+            n_points=n_points,
+            use_mask=True,
+        )
+    else:
+        collocation = collocation_pts
+
+    if plot:
+        f, ax = plt.subplots()
+        ax.scatter(collocation.x, collocation.z, zorder=10)
+        eq.plot(ax=ax)
+        ax.set_title(f"DOF: {n_degrees_of_freedom}, points: {n_points}, value: {value}")
+        plt.show()
+
+        # save in folder
+        folder = "collocation_pt_plot"
+        if not Path(folder).exists():
+            Path.mkdir(folder)
+        name = f"DOF_{n_degrees_of_freedom}_n_points_{n_points}"
+        save_figure(fig=f, name=name, save=True, folder=folder)
 
     true_coilset_psi, fixed_psi, collocation_psi = _separate_psi_contributions(
         eq, th_params, collocation
@@ -1042,26 +1072,69 @@ def toroidal_harmonic_approximation(
 
     # Starting error for comparison
     error = np.inf
+    if plot:
+        f, ax = plt.subplots(3, 1)
+        ax[0].set_title("matrix condition number")
+        ax[1].set_title("fit residual")
+        ax[2].set_title("psi error")
 
+    # matrix condition number ideally want to be 1
+    # -> an ill-conditioned matrix (large condition number) means that a
+    # small change in the input results in a large change in the output
+    # eg small noise would mean huge amplitude changes for ill conditioned matrix
+    # residual as close to 0 as possible (depending on scale )
+    # want error as small as we can get
+    i = 0
     for c in combinations(dof_id, n_degrees_of_freedom):
+        if i == 40:
+            break
         mode_id = np.array(c)
         cos_m_chosen = mode_values[mode_id[mode_id <= max_harmonic_mode]]
         sin_m_chosen = mode_values[mode_id[mode_id > max_harmonic_mode]]
 
         # Calculate psi using the combination of poloidal mode numbers (m)
         # selected in this iteration at the collocation points
-        error_new, approximate_coilset_psi, cos_amps, sin_amps = (
-            _approximation_from_psi_fitting(
-                th_params,
-                max_harmonic_mode,
-                collocation,
-                cos_m_chosen,
-                sin_m_chosen,
-                collocation_psi,
-                mask,
-                true_coilset_psi,
-            )
+        (
+            error_new,
+            approximate_coilset_psi,
+            cos_amps,
+            sin_amps,
+            cond_num_h2c,
+            residual,
+        ) = _approximation_from_psi_fitting(
+            th_params,
+            max_harmonic_mode,
+            collocation,
+            cos_m_chosen,
+            sin_m_chosen,
+            collocation_psi,
+            mask,
+            true_coilset_psi,
         )
+        # run for incrementally larger DOF for RANDOM
+        # do 3 to 6 DOF
+        # vary the number of collocation points used in total from the
+        # DOF , DOF + 1, + 2 etc up to + 36
+        # 3 * 6 experiments in total for each type of colloc
+        if plot:
+            ax[0].scatter(
+                i,
+                cond_num_h2c,
+            )
+            ax[0].axhline(y=1)
+
+            if residual.size > 0:  # b/c failed for DOF 6 as residual was empty arr
+                ax[1].scatter(i, residual)
+
+            ax[2].scatter(i, error_new)
+
+            # plot error vs condition and error vs residual
+
+            for a in ax:
+                a.set_yscale("log")
+            ax[1].axhline(y=0)
+        i += 1
+
         # If the new error is less than the previously lowest error,
         # then select the current combination of poloidal mode
         # numbers (m), amplitudes and associated psi
@@ -1072,6 +1145,23 @@ def toroidal_harmonic_approximation(
             coilset_psi = approximate_coilset_psi
             cos_amplitudes = cos_amps
             sin_amplitudes = sin_amps
+            res = residual
+            condition_num = cond_num_h2c
+
+    if plot:
+        plt.show()
+        # save in folder
+        folder = "combo_vs_condition_and_residual"
+        if not Path(folder).exists():
+            Path.mkdir(folder)
+        name = f"iteration_vs_residual_and_condition_for_DOF_{n_degrees_of_freedom}_n_points_{n_points}"
+        save_figure(fig=f, name=name, save=True, folder=folder)
+
+        true_coilset_psi, fixed_psi, collocation_psi = _separate_psi_contributions(
+            eq, th_params, collocation
+        )
+    # save a few of these plots, eg first, middle and last for each
+    # comment out when not plotting - plot arg
 
     return ToroidalHarmonicsSelectionResult(
         cos_m=cos_m,
@@ -1083,6 +1173,9 @@ def toroidal_harmonic_approximation(
         fixed_psi=fixed_psi,
         true_unfixed_psi=true_coilset_psi,
         th_params=th_params,
+        residual=res,
+        condition_number=condition_num,
+        n_points=n_points,
     )
 
 
@@ -1168,6 +1261,8 @@ def _approximation_from_psi_fitting(
     harmonics2collocation = np.append(
         harmonics2collocation_cos, harmonics2collocation_sin, axis=0
     )
+    # matrix condition number for debug investigations
+    _cond_num_h2c = np.linalg.cond(harmonics2collocation)
 
     psi_harmonic_amplitudes, _residual, _rank, _s = np.linalg.lstsq(
         harmonics2collocation.T, collocation_psi, rcond=None
@@ -1190,7 +1285,14 @@ def _approximation_from_psi_fitting(
     )
     cos_amps = psi_harmonic_amplitudes[: len(cos_m_chosen)]
     sin_amps = psi_harmonic_amplitudes[len(cos_m_chosen) :]
-    return error_new, psi_from_fit_to_collocation_points.T, cos_amps, sin_amps
+    return (
+        error_new,
+        psi_from_fit_to_collocation_points.T,
+        cos_amps,
+        sin_amps,
+        _cond_num_h2c,
+        _residual,
+    )
 
 
 def plot_toroidal_harmonic_approximation(
